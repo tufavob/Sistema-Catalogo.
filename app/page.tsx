@@ -7,14 +7,14 @@ export default function Home() {
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-white">
           BUEN MUCHACHO
         </h1>
-        
+
         <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
           <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
             HOLA SOY CHAVITO{" "}
             <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              EL MAS PERRON PARA COMER CROQUETAS
+              EL MAS PERRON PA COMER CROQUETAS
             </code>{" "}
-            file.
+            
           </h1>
           <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
             {" "}
