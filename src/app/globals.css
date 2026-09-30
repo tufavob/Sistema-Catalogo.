@@ -1,0 +1,342 @@
+@import "tailwindcss";
+
+:root {
+  /* Superficies */
+  --surface: #ffffff;
+  --surface-muted: #f4f4f5;
+  --ink: #18181b;
+
+  /* Identidad Dark Urban (verde profundo) */
+  --night: #022c22;
+  --night-border: #064e3b;
+  --gold: #fbbf24;
+  --whatsapp: #10b981;
+
+  --header-height: 3.5rem;
+}
+
+@theme inline {
+  --color-background: var(--surface-muted);
+  --color-foreground: var(--ink);
+  --font-sans: var(--font-inter);
+}
+
+/* ---------------------------------------------------------------- *
+ * Sistema de diseño Northumbria
+ * Base mobile-first. Radios 2xl/3xl, foco visible en toda acción.
+ * ---------------------------------------------------------------- */
+
+@layer components {
+  .btn {
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-6 text-sm font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-[0.98];
+  }
+
+  .btn-primary {
+    @apply relative overflow-hidden bg-emerald-500 text-zinc-950 shadow-lg shadow-emerald-500/25 hover:bg-emerald-400 focus-visible:outline-emerald-600;
+  }
+
+  .btn-ghost-dark {
+    @apply border border-white/20 bg-white/5 text-white hover:bg-white/10 focus-visible:outline-amber-400;
+  }
+
+  .btn-whatsapp {
+    @apply w-full min-h-11 bg-emerald-500 text-zinc-950 hover:bg-emerald-400 focus-visible:outline-emerald-600;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold backdrop-blur-sm;
+  }
+
+  .badge-available {
+    @apply border-emerald-500/25 bg-emerald-50/95 text-emerald-700;
+  }
+
+  .badge-promo {
+    @apply border-amber-500/25 bg-amber-50/95 text-amber-800;
+  }
+
+  .badge-sold-out {
+    @apply border-rose-500/25 bg-rose-50/95 text-rose-700;
+  }
+
+  .trust-badge {
+    @apply flex flex-col items-center gap-1.5 rounded-2xl border border-white/10 bg-white/5 px-2 py-3 text-center sm:flex-row sm:gap-3 sm:px-4 sm:text-left;
+  }
+
+  .chip {
+    @apply min-h-11 shrink-0 snap-start rounded-full border px-4 py-2 text-sm font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2;
+  }
+
+  .chip-active {
+    @apply border-zinc-900 bg-zinc-900 text-white focus-visible:outline-zinc-900;
+  }
+
+  .chip-idle {
+    @apply border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-zinc-400;
+  }
+
+  .card {
+    @apply flex h-full flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-lg;
+    transform: perspective(900px) rotateX(var(--tilt-x, 0deg))
+      rotateY(var(--tilt-y, 0deg));
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s
+      cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .card:hover {
+      box-shadow: 0 28px 60px -24px rgb(4 120 87 / 0.45);
+    }
+  }
+
+  .variant {
+    @apply min-h-9 shrink-0 snap-start rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2;
+  }
+
+  .variant-active {
+    @apply border-zinc-900 bg-zinc-900 text-white;
+  }
+
+  .variant-idle {
+    @apply border-zinc-200 bg-zinc-50 text-zinc-600 hover:border-zinc-400 hover:text-zinc-900;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Capa de movimiento: aurora, spotlight, marquesina, reveals y tilt
+ * ------------------------------------------------------------------ */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 30px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes aurora-a {
+  0%,
+  100% {
+    transform: translate3d(-12%, -6%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(12%, 10%, 0) scale(1.18);
+  }
+}
+
+@keyframes aurora-b {
+  0%,
+  100% {
+    transform: translate3d(14%, 8%, 0) scale(1.1);
+  }
+  50% {
+    transform: translate3d(-14%, -10%, 0) scale(0.95);
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes shine {
+  from {
+    transform: translate3d(-130%, 0, 0) skewX(-14deg);
+  }
+  to {
+    transform: translate3d(260%, 0, 0) skewX(-14deg);
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.82);
+  }
+}
+
+.hero-enter {
+  animation: rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+
+.aurora {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(64px);
+  pointer-events: none;
+}
+
+.aurora-emerald {
+  background: radial-gradient(circle, rgb(16 185 129 / 0.55), transparent 70%);
+  animation: aurora-a 18s ease-in-out infinite;
+}
+
+.aurora-amber {
+  background: radial-gradient(circle, rgb(251 191 36 / 0.28), transparent 70%);
+  animation: aurora-b 22s ease-in-out infinite;
+  animation-delay: -7s;
+}
+
+.aurora-deep {
+  background: radial-gradient(circle, rgb(6 95 70 / 0.65), transparent 70%);
+  animation: aurora-a 26s ease-in-out infinite reverse;
+  animation-delay: -13s;
+}
+
+.hero-spotlight {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    420px circle at var(--mx, 50%) var(--my, 0%),
+    rgb(16 185 129 / 0.22),
+    transparent 62%
+  );
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.btn-magnetic {
+  transform: translate3d(var(--pull-x, 0px), var(--pull-y, 0px), 0);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color
+    0.2s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-magnetic:hover {
+    transform: translate3d(var(--pull-x, 0px), calc(var(--pull-y, 0px) - 2px), 0)
+      scale(1.03);
+  }
+
+  .btn-primary::after {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 38%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgb(255 255 255 / 0.6),
+      transparent
+    );
+    transform: translate3d(-130%, 0, 0) skewX(-14deg);
+    pointer-events: none;
+  }
+
+  .btn-primary:hover::after {
+    animation: shine 0.95s ease-out;
+  }
+}
+
+.live-dot {
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}
+
+.marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent,
+    black 8%,
+    black 92%,
+    transparent
+  );
+  mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 32s linear infinite;
+}
+
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, var(--reveal-y, 26px), 0);
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.card-glare {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: radial-gradient(
+    280px circle at var(--glow-x, 50%) var(--glow-y, 50%),
+    rgb(16 185 129 / 0.16),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card:hover .card-glare {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  ::before,
+  ::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+
+  .card {
+    transform: none !important;
+  }
+}
