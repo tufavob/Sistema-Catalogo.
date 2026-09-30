@@ -20,97 +20,90 @@ export async function login(input: {
   email: string;
   password: string;
 }): Promise<{ error?: string }> {
-  const supabase = await createClient();
+  let authError: string | null = null;
 
-  const { error } = await supabase.auth.signInWithPassword(input);
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.auth.signInWithPassword(input);
+    authError = error ? readableAuthError(error.message) : null;
+  } catch (error) {
+    console.error("Error al iniciar sesión:", error);
+    return {
+      error: "No se pudo conectar con el servidor. Inténtalo de nuevo.",
+    };
+  }
 
-  if (error) {
-    return { error: readableAuthError(error.message) };
+  if (authError) {
+    return { error: authError };
   }
 
   redirect("/admin");
 }
 
 export async function signOut(): Promise<void> {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  try {
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+  } catch (error) {
+    console.error("Error al cerrar sesión:", error);
+  }
+
   redirect("/admin/login");
 }
 
 async function requireSupabase() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (!user) {
+    if (!user) {
+      return null;
+    }
+
+    return supabase;
+  } catch (error) {
+    console.error("Error al verificar la sesión:", error);
     return null;
   }
-
-  return supabase;
 }
 
 export async function listProducts(): Promise<{
   products: ProductWithCategory[];
 }> {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("products")
-    .select(
-      "id, title, brand, model, storage, color, price, stock, status, image_url, description, category_id, created_at, categories(id, name, slug)"
-    )
-    .order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("products")
+      .select(
+        "id, title, brand, model, storage, color, price, stock, status, image_url, description, category_id, created_at, categories(id, name, slug)",
+      )
+      .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("Error al listar productos:", error.message);
+    if (error) {
+      console.error("Error al listar productos:", error.message);
+      return { products: [] };
+    }
+
+    return { products: (data ?? []) as unknown as ProductWithCategory[] };
+  } catch (error) {
+    console.error("Error al listar productos:", error);
     return { products: [] };
   }
-
-  return { products: (data ?? []) as unknown as ProductWithCategory[] };
 }
 
 export async function createProduct(
-  input: ProductInput
+  input: ProductInput,
 ): Promise<ActionResult> {
-  const supabase = await requireSupabase();
-  if (!supabase) {
-    return { ok: false, message: "No autorizado. Inicia sesión nuevamente." };
-  }
+  try {
+    const supabase = await requireSupabase();
+    if (!supabase) {
+      return { ok: false, message: "No autorizado. Inicia sesión nuevamente." };
+    }
 
-  const { error } = await supabase.from("products").insert({
-    title: input.title.trim(),
-    brand: input.brand.trim(),
-    model: input.model.trim(),
-    storage: input.storage?.trim() || null,
-    color: input.color?.trim() || null,
-    price: input.price,
-    stock: input.stock,
-    status: input.status,
-    description: input.description?.trim() || null,
-    category_id: input.category_id || null,
-    image_url: input.image_url?.trim() || null,
-  });
-
-  if (error) {
-    return { ok: false, message: error.message };
-  }
-
-  return { ok: true };
-}
-
-export async function updateProduct(
-  id: string,
-  input: ProductInput
-): Promise<ActionResult> {
-  const supabase = await requireSupabase();
-  if (!supabase) {
-    return { ok: false, message: "No autorizado. Inicia sesión nuevamente." };
-  }
-
-  const { error } = await supabase
-    .from("products")
-    .update({
+    const { error } = await supabase.from("products").insert({
       title: input.title.trim(),
       brand: input.brand.trim(),
       model: input.model.trim(),
@@ -122,27 +115,82 @@ export async function updateProduct(
       description: input.description?.trim() || null,
       category_id: input.category_id || null,
       image_url: input.image_url?.trim() || null,
-    })
-    .eq("id", id);
+    });
 
-  if (error) {
-    return { ok: false, message: error.message };
+    if (error) {
+      return { ok: false, message: error.message };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    console.error("Error al crear el producto:", error);
+    return {
+      ok: false,
+      message: "No se pudo crear el producto. Inténtalo de nuevo.",
+    };
   }
+}
 
-  return { ok: true };
+export async function updateProduct(
+  id: string,
+  input: ProductInput,
+): Promise<ActionResult> {
+  try {
+    const supabase = await requireSupabase();
+    if (!supabase) {
+      return { ok: false, message: "No autorizado. Inicia sesión nuevamente." };
+    }
+
+    const { error } = await supabase
+      .from("products")
+      .update({
+        title: input.title.trim(),
+        brand: input.brand.trim(),
+        model: input.model.trim(),
+        storage: input.storage?.trim() || null,
+        color: input.color?.trim() || null,
+        price: input.price,
+        stock: input.stock,
+        status: input.status,
+        description: input.description?.trim() || null,
+        category_id: input.category_id || null,
+        image_url: input.image_url?.trim() || null,
+      })
+      .eq("id", id);
+
+    if (error) {
+      return { ok: false, message: error.message };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    console.error("Error al actualizar el producto:", error);
+    return {
+      ok: false,
+      message: "No se pudo actualizar el producto. Inténtalo de nuevo.",
+    };
+  }
 }
 
 export async function deleteProduct(id: string): Promise<ActionResult> {
-  const supabase = await requireSupabase();
-  if (!supabase) {
-    return { ok: false, message: "No autorizado. Inicia sesión nuevamente." };
+  try {
+    const supabase = await requireSupabase();
+    if (!supabase) {
+      return { ok: false, message: "No autorizado. Inicia sesión nuevamente." };
+    }
+
+    const { error } = await supabase.from("products").delete().eq("id", id);
+
+    if (error) {
+      return { ok: false, message: error.message };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    console.error("Error al eliminar el producto:", error);
+    return {
+      ok: false,
+      message: "No se pudo eliminar el producto. Inténtalo de nuevo.",
+    };
   }
-
-  const { error } = await supabase.from("products").delete().eq("id", id);
-
-  if (error) {
-    return { ok: false, message: error.message };
-  }
-
-  return { ok: true };
 }
