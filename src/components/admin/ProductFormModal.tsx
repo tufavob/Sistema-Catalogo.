@@ -11,6 +11,7 @@ import type {
 import { createProduct, updateProduct } from "@/app/admin/actions";
 import { uploadProductImage } from "@/lib/supabase/browser";
 import { formatTitle, parseColors, parseImages } from "@/lib/utils";
+import { CATEGORY_LABELS, FEATURED_CATEGORIES } from "@/lib/categories";
 import { PhoneIcon } from "@/components/icons";
 
 const BRAND_SUGGESTIONS = [
@@ -26,21 +27,12 @@ const BRAND_SUGGESTIONS = [
   "Google",
 ];
 
-const CATEGORY_LABELS: Record<string, string> = {
-  iPhone: "iPhone / Celulares",
-  Accesorios: "Accesorios",
-  Ropa: "Ropa / Streetwear",
-  Perfumes: "Perfumes & Fragancias",
-};
-
-const CURATED_CATEGORIES = ["iPhone", "Accesorios", "Ropa", "Perfumes"];
-
 function categoryOrder(a: Category, b: Category): number {
-  const indexA = CURATED_CATEGORIES.indexOf(a.name);
-  const indexB = CURATED_CATEGORIES.indexOf(b.name);
+  const indexA = FEATURED_CATEGORIES.indexOf(a.name);
+  const indexB = FEATURED_CATEGORIES.indexOf(b.name);
   return (
-    (indexA === -1 ? CURATED_CATEGORIES.length : indexA) -
-      (indexB === -1 ? CURATED_CATEGORIES.length : indexB) ||
+    (indexA === -1 ? FEATURED_CATEGORIES.length : indexA) -
+      (indexB === -1 ? FEATURED_CATEGORIES.length : indexB) ||
     a.name.localeCompare(b.name)
   );
 }
@@ -108,7 +100,7 @@ export function ProductFormModal({
 
     try {
       const urls = await Promise.all(
-        files.map((file) => uploadProductImage(file))
+        files.map((file) => uploadProductImage(file)),
       );
       const existing = parseImages(form.image_url);
       setField("image_url", [...existing, ...urls].join(", "));
@@ -117,7 +109,7 @@ export function ProductFormModal({
       setUploadError(
         error instanceof Error
           ? error.message
-          : "No se pudo subir la imagen. Intenta nuevamente."
+          : "No se pudo subir la imagen. Intenta nuevamente.",
       );
     } finally {
       setUploading(false);
@@ -172,7 +164,9 @@ export function ProductFormModal({
     setSaving(false);
 
     if (!result.ok) {
-      setFormError(result.message ?? "Ocurrió un error al guardar el producto.");
+      setFormError(
+        result.message ?? "Ocurrió un error al guardar el producto.",
+      );
       return;
     }
 
@@ -401,20 +395,20 @@ export function ProductFormModal({
                 {categories.length === 0 ? (
                   <option value="">Sin categoría</option>
                 ) : (
-                  [...categories]
-                    .sort(categoryOrder)
-                    .map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {CATEGORY_LABELS[category.name] ?? category.name}
-                      </option>
-                    ))
+                  [...categories].sort(categoryOrder).map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {CATEGORY_LABELS[category.name] ?? category.name}
+                    </option>
+                  ))
                 )}
               </select>
             </div>
           </div>
 
           <div className="rounded-2xl border border-zinc-200 p-4">
-            <p className="text-sm font-bold text-zinc-900">Imagen del producto</p>
+            <p className="text-sm font-bold text-zinc-900">
+              Imagen del producto
+            </p>
             <div className="mt-3 flex flex-wrap items-start gap-4">
               <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-xl border border-zinc-200 bg-zinc-100">
                 {showPreview ? (
@@ -451,7 +445,9 @@ export function ProductFormModal({
                   disabled={uploading}
                   className="inline-flex items-center gap-2 rounded-xl border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-60"
                 >
-                  {uploading ? "Subiendo imágenes…" : "Subir imágenes (.jpg, .png, .webp)"}
+                  {uploading
+                    ? "Subiendo imágenes…"
+                    : "Subir imágenes (.jpg, .png, .webp)"}
                 </button>
                 {uploadError ? (
                   <p className="text-xs font-medium text-red-600">

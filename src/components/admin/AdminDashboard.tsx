@@ -9,8 +9,7 @@ import ProductThumb from "@/components/admin/ProductThumb";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { ProductFormModal } from "@/components/admin/ProductFormModal";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
-
-const CURATED_CATEGORIES = ["iPhone", "Accesorios", "Ropa", "Perfumes"];
+import { FEATURED_CATEGORIES } from "@/lib/categories";
 
 export function AdminDashboard({
   initialProducts,
@@ -122,9 +121,9 @@ export function AdminDashboard({
           <option value="all">Todas las categorías</option>
           {Array.from(
             new Set([
-              ...CURATED_CATEGORIES,
+              ...FEATURED_CATEGORIES,
               ...categories.map((category) => category.name),
-            ])
+            ]),
           ).map((name) => (
             <option key={name} value={name}>
               {name}
@@ -144,8 +143,8 @@ export function AdminDashboard({
           <div className="flex flex-col items-center px-6 py-16 text-center">
             <p className="text-lg font-bold text-zinc-900">Sin productos aún</p>
             <p className="mt-2 max-w-md text-sm leading-6 text-zinc-500">
-              Usa el botón &quot;Agregar Nuevo Producto&quot; para publicar tu primer
-              equipo en el catálogo.
+              Usa el botón &quot;Agregar Nuevo Producto&quot; para publicar tu
+              primer equipo en el catálogo.
             </p>
           </div>
         ) : filteredProducts.length === 0 ? (
@@ -168,14 +167,19 @@ export function AdminDashboard({
                   <th className="px-5 py-3 font-semibold">Precio (S/)</th>
                   <th className="px-5 py-3 font-semibold">Stock</th>
                   <th className="px-5 py-3 font-semibold">Estado</th>
-                  <th className="px-5 py-3 text-right font-semibold">Acciones</th>
+                  <th className="px-5 py-3 text-right font-semibold">
+                    Acciones
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
                 {filteredProducts.map((product) => (
                   <tr key={product.id} className="transition hover:bg-zinc-50">
                     <td className="px-5 py-3">
-                      <ProductThumb src={product.image_url} alt={product.title} />
+                      <ProductThumb
+                        src={product.image_url}
+                        alt={product.title}
+                      />
                     </td>
                     <td className="px-5 py-3">
                       <p className="font-bold text-zinc-900">
@@ -197,7 +201,9 @@ export function AdminDashboard({
                     <td className="px-5 py-3 text-zinc-600">
                       <span
                         className={
-                          product.stock === 0 ? "font-semibold text-red-600" : ""
+                          product.stock === 0
+                            ? "font-semibold text-red-600"
+                            : ""
                         }
                       >
                         {product.stock}
@@ -232,7 +238,7 @@ export function AdminDashboard({
         )}
       </div>
 
-      {(creating || editing) ? (
+      {creating || editing ? (
         <ProductFormModal
           product={editing}
           categories={categories}

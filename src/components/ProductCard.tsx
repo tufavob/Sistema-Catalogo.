@@ -5,7 +5,12 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import type { Product, ProductStatus } from "@/types/database";
 import { buildProductWhatsAppLink } from "@/lib/whatsapp";
 import { formatPrice } from "@/lib/format";
-import { formatTitle, parseColors, parseImages, parseVariants } from "@/lib/utils";
+import {
+  formatTitle,
+  parseColors,
+  parseImages,
+  parseVariants,
+} from "@/lib/utils";
 import { PhoneIcon, WhatsAppIcon } from "@/components/icons";
 
 const CARD_STATUS: Record<
@@ -29,12 +34,20 @@ const CARD_STATUS: Record<
   },
 };
 
+const SWIPE_THRESHOLD = 40;
+
+const ARROW_CLASS =
+  "absolute top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-zinc-900 opacity-100 shadow-sm backdrop-blur transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100";
+
 export function ProductCard({ product }: { product: Product }) {
   const images = parseImages(product.image_url);
   const colors = parseColors(product.color);
   const storages = parseVariants(product.storage);
 
   const cardRef = useRef<HTMLElement>(null);
+  const swipeRef = useRef<{ x: number; y: number; pointerId: number } | null>(
+    null,
+  );
   const [imageIndex, setImageIndex] = useState(0);
   const [imageFailed, setImageFailed] = useState(false);
   const [selectedColor, setSelectedColor] = useState(colors[0] ?? "");
@@ -43,17 +56,70 @@ export function ProductCard({ product }: { product: Product }) {
   const isOutOfStock = product.status === "out_of_stock";
   const currentImage = images[imageIndex] ?? images[0] ?? null;
   const showImage = Boolean(currentImage) && !imageFailed;
+  const canBrowse = images.length > 1 && showImage;
+  const showArrows = images.length >= 3 && showImage;
   const status = CARD_STATUS[product.status];
   const title = formatTitle(product.title);
 
   const productLinkData = {
     id: product.id,
     title,
-    storage: selectedStorage || (product.storage ? formatTitle(product.storage) : null),
+    storage:
+      selectedStorage ||
+      (product.storage ? formatTitle(product.storage) : null),
     color: selectedColor || null,
     price: product.price,
   };
   const whatsappUrl = buildProductWhatsAppLink(productLinkData);
+
+  function goToImage(next: number) {
+    const total = images.length;
+    if (total === 0) return;
+    const wrapped = ((next % total) + total) % total;
+    setImageFailed(false);
+    setImageIndex(wrapped);
+  }
+
+  function handleColorSelect(color: string) {
+    setSelectedColor(color);
+    const colorIndex = colors.indexOf(color);
+    if (images.length > 1 && colorIndex >= 0) {
+      goToImage(Math.min(colorIndex, images.length - 1));
+    }
+  }
+
+  function handleMediaPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    if (!canBrowse || !event.isPrimary) return;
+    if ((event.target as HTMLElement).closest("button")) return;
+
+    swipeRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      pointerId: event.pointerId,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function handleMediaPointerUp(event: ReactPointerEvent<HTMLDivElement>) {
+    const start = swipeRef.current;
+    if (!start || start.pointerId !== event.pointerId) return;
+    swipeRef.current = null;
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+    if (
+      Math.abs(deltaX) < SWIPE_THRESHOLD ||
+      Math.abs(deltaX) <= Math.abs(deltaY)
+    ) {
+      return;
+    }
+
+    goToImage(imageIndex + (deltaX < 0 ? 1 : -1));
+  }
 
   function handlePointerMove(event: ReactPointerEvent<HTMLElement>) {
     if (event.pointerType === "touch") return;
@@ -67,8 +133,14 @@ export function ProductCard({ product }: { product: Product }) {
 
     card.style.setProperty("--tilt-x", `${(-offsetY * 4).toFixed(2)}deg`);
     card.style.setProperty("--tilt-y", `${(offsetX * 5).toFixed(2)}deg`);
-    card.style.setProperty("--glow-x", `${((offsetX + 0.5) * 100).toFixed(1)}%`);
-    card.style.setProperty("--glow-y", `${((offsetY + 0.5) * 100).toFixed(1)}%`);
+    card.style.setProperty(
+      "--glow-x",
+      `${((offsetX + 0.5) * 100).toFixed(1)}%`,
+    );
+    card.style.setProperty(
+      "--glow-y",
+      `${((offsetY + 0.5) * 100).toFixed(1)}%`,
+    );
   }
 
   function handlePointerLeave() {
@@ -87,14 +159,20 @@ export function ProductCard({ product }: { product: Product }) {
       onPointerLeave={handlePointerLeave}
       className="card group"
     >
-      <div className="relative aspect-[4/5] overflow-hidden bg-zinc-100">
+      <div
+        className="relative aspect-[4/5] touch-pan-y overflow-hidden bg-zinc-100"
+        onPointerDown={handleMediaPointerDown}
+        onPointerUp={handleMediaPointerUp}
+        onPointerCancel={handleMediaPointerUp}
+      >
         {showImage ? (
           <img
             src={currentImage as string}
             alt={title}
             loading="lazy"
+            draggable={false}
             onError={() => setImageFailed(true)}
-            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+            className="pointer-events-none h-full w-full select-none object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-zinc-100 to-zinc-200">
@@ -114,16 +192,60 @@ export function ProductCard({ product }: { product: Product }) {
           {status.label}
         </span>
 
+        {showArrows ? (
+          <>
+            <button
+              type="button"
+              onClick={() => goToImage(imageIndex - 1)}
+              aria-label="Imagen anterior"
+              className={`${ARROW_CLASS} left-2`}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2.5}
+                className="h-3.5 w-3.5"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15 6l-6 6 6 6"
+                />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => goToImage(imageIndex + 1)}
+              aria-label="Imagen siguiente"
+              className={`${ARROW_CLASS} right-2`}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2.5}
+                className="h-3.5 w-3.5"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 6l6 6-6 6"
+                />
+              </svg>
+            </button>
+          </>
+        ) : null}
+
         {images.length > 1 ? (
           <div className="absolute bottom-2.5 left-2.5 z-10 flex items-center gap-1.5">
             {images.map((image, position) => (
               <button
                 key={image}
                 type="button"
-                onClick={() => {
-                  setImageFailed(false);
-                  setImageIndex(position);
-                }}
+                onClick={() => goToImage(position)}
                 aria-label={`Ver imagen ${position + 1}`}
                 aria-pressed={imageIndex === position}
                 className="-m-1.5 p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900"
@@ -138,6 +260,12 @@ export function ProductCard({ product }: { product: Product }) {
               </button>
             ))}
           </div>
+        ) : null}
+
+        {showArrows ? (
+          <span className="absolute bottom-2.5 right-2.5 z-10 rounded-full bg-zinc-950/60 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-white backdrop-blur">
+            {imageIndex + 1}/{images.length}
+          </span>
         ) : null}
       </div>
 
@@ -161,19 +289,13 @@ export function ProductCard({ product }: { product: Product }) {
           />
         ) : null}
 
-        {colors.length > 1 ? (
+        {colors.length > 0 ? (
           <VariantPicker
+            accent
             label="Color"
             options={colors}
             selected={selectedColor}
-            onSelect={(color) => {
-              setSelectedColor(color);
-              const colorIndex = colors.indexOf(color);
-              if (images.length > 1 && colorIndex >= 0) {
-                setImageFailed(false);
-                setImageIndex(Math.min(colorIndex, images.length - 1));
-              }
-            }}
+            onSelect={handleColorSelect}
           />
         ) : null}
 
@@ -188,7 +310,7 @@ export function ProductCard({ product }: { product: Product }) {
           onClick={(event) => {
             const url = buildProductWhatsAppLink(
               productLinkData,
-              `${window.location.origin}${window.location.pathname}#producto-${product.id}`
+              `${window.location.origin}${window.location.pathname}#producto-${product.id}`,
             );
             window.open(url, "_blank", "noopener,noreferrer");
             event.preventDefault();
@@ -215,17 +337,27 @@ function VariantPicker({
   options,
   selected,
   onSelect,
+  accent = false,
 }: {
   label: string;
   options: string[];
   selected: string;
   onSelect: (value: string) => void;
+  accent?: boolean;
 }) {
   return (
     <div>
-      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
-        {label}
-        {selected ? `: ${selected}` : ""}
+      <p
+        className={`mb-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider sm:text-xs ${
+          accent ? "text-zinc-900" : "text-zinc-500"
+        }`}
+      >
+        <span>{label}:</span>
+        {selected ? (
+          <span className={accent ? "text-amber-500" : undefined}>
+            {selected}
+          </span>
+        ) : null}
       </p>
       <div
         role="group"
