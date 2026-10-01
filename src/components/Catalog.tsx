@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
-import type { Category, ProductWithCategory } from "@/types/database";
+import { useMemo, useState } from "react";
+import type { Category, Product, ProductWithCategory } from "@/types/database";
 import { ProductCard } from "@/components/ProductCard";
+import { ProductModal } from "@/components/ProductModal";
+import { ProductErrorBoundary } from "@/components/ProductErrorBoundary";
 import { Reveal } from "@/components/motion/Reveal";
 import { useStore } from "@/components/store/StoreProvider";
 import { PhoneIcon } from "@/components/icons";
@@ -17,6 +19,7 @@ type CatalogProps = {
 
 export function Catalog({ products, categories }: CatalogProps) {
   const { query, category, setCategory } = useStore();
+  const [quickView, setQuickView] = useState<Product | null>(null);
 
   const categoryNames = useMemo(() => {
     const extra = categories.map((item) => item.name).filter(Boolean);
@@ -94,13 +97,19 @@ export function Catalog({ products, categories }: CatalogProps) {
         ) : (
           <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-6">
             {visibleProducts.map((product, index) => (
-              <Reveal key={product.id} delay={Math.min(index, 7) * 70}>
-                <ProductCard product={product} />
-              </Reveal>
+              <ProductErrorBoundary key={product.id}>
+                <Reveal delay={Math.min(index, 7) * 70}>
+                  <ProductCard product={product} onQuickView={setQuickView} />
+                </Reveal>
+              </ProductErrorBoundary>
             ))}
           </div>
         )}
       </div>
+
+      {quickView ? (
+        <ProductModal product={quickView} onClose={() => setQuickView(null)} />
+      ) : null}
     </section>
   );
 }

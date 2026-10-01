@@ -1,3 +1,4 @@
+import { SOCIAL_LINKS } from "@/lib/social";
 import { WhatsAppIcon } from "@/components/icons";
 import { Reveal } from "@/components/motion/Reveal";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
@@ -30,8 +31,8 @@ export function Footer() {
                 Buen Muchacho
               </p>
               <p className="mt-4 max-w-xs text-sm leading-6 text-zinc-300">
-                Celulares, accesorios y streetwear exclusivo con envío asegurado.
-                Pedidos directos por WhatsApp, sin intermediarios.
+                Celulares, accesorios y streetwear exclusivo con envío
+                asegurado. Pedidos directos por WhatsApp, sin intermediarios.
               </p>
               <a
                 href={buildWhatsAppLink(footerMessage)}
@@ -87,6 +88,30 @@ export function Footer() {
                   </li>
                 ))}
               </ul>
+
+              <h2 className="mt-8 text-xs font-bold uppercase tracking-[0.2em] text-white">
+                Síguenos
+              </h2>
+              <ul className="mt-4 flex flex-wrap items-center gap-2.5">
+                {SOCIAL_LINKS.map(({ label, href, Icon, placeholder }) => (
+                  <li key={label}>
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={
+                        placeholder
+                          ? `${label} (próximamente)`
+                          : `${label} de Northumbria`
+                      }
+                      title={placeholder ? "Próximamente" : label}
+                      className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-zinc-200 transition-colors hover:border-amber-400/50 hover:bg-white/10 hover:text-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
+                    >
+                      <Icon className="h-5 w-5" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </div>
           </Reveal>
         </div>
@@ -96,9 +121,7 @@ export function Footer() {
             © {new Date().getFullYear()} Northumbria · Buen Muchacho. Todos los
             derechos reservados.
           </p>
-          <p className="text-xs text-zinc-400">
-            Compra directa, sin vueltas.
-          </p>
+          <p className="text-xs text-zinc-400">Compra directa, sin vueltas.</p>
         </div>
       </div>
     </footer>

@@ -18,6 +18,7 @@ export type Product = {
   stock: number;
   status: ProductStatus;
   image_url: string | null;
+  color_galleries: string | Record<string, unknown> | null;
   description: string | null;
   category_id: string | null;
   created_at: string;
@@ -26,6 +27,8 @@ export type Product = {
 export type ProductWithCategory = Product & {
   categories: Pick<Category, "id" | "name" | "slug"> | null;
 };
+
+export type ProductColorGallery = Record<string, string[]>;
 
 export type ProductInput = {
   title: string;
@@ -39,4 +42,5 @@ export type ProductInput = {
   description: string | null;
   category_id: string | null;
   image_url: string | null;
+  color_galleries: string | null;
 };

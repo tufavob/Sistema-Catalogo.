@@ -39,6 +39,43 @@ export function parseImages(imageUrl: string | null | undefined): string[] {
     .filter(Boolean);
 }
 
+export function parseColorGalleries(
+  source: string | Record<string, unknown> | null | undefined,
+): Record<string, string[]> {
+  if (!source) return {};
+
+  let parsed: unknown = source;
+
+  if (typeof source === "string") {
+    try {
+      parsed = JSON.parse(source);
+    } catch {
+      return {};
+    }
+  }
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(parsed as Record<string, unknown>)
+      .map(([color, value]) => {
+        const images = Array.isArray(value)
+          ? value.filter((url): url is string => typeof url === "string")
+          : typeof value === "string"
+            ? value.split(",")
+            : [];
+
+        return [
+          color,
+          images.map((url) => url.trim()).filter(Boolean),
+        ] as const;
+      })
+      .filter(([, images]) => images.length > 0),
+  );
+}
+
 export function parseVariants(value: string | null | undefined): string[] {
   if (!value) return [];
   return value

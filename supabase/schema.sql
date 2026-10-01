@@ -19,10 +19,14 @@ create table if not exists public.products (
   status text not null default 'available'
     check (status in ('available', 'out_of_stock', 'promo')),
   image_url text,
+  color_galleries jsonb,
   description text,
   category_id uuid references public.categories (id) on delete set null,
   created_at timestamptz not null default now()
 );
+
+alter table public.products
+  add column if not exists color_galleries jsonb;
 
 create index if not exists products_category_id_idx
   on public.products (category_id);

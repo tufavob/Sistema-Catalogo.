@@ -1,17 +1,26 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { PointerEvent as ReactPointerEvent } from "react";
+import type {
+  MouseEvent as ReactMouseEvent,
+  PointerEvent as ReactPointerEvent,
+} from "react";
 import type { Product, ProductStatus } from "@/types/database";
 import { buildProductWhatsAppLink } from "@/lib/whatsapp";
 import { formatPrice } from "@/lib/format";
 import {
   formatTitle,
+  parseColorGalleries,
   parseColors,
   parseImages,
   parseVariants,
 } from "@/lib/utils";
 import { PhoneIcon, WhatsAppIcon } from "@/components/icons";
+import {
+  colorNameOf,
+  resolveColorImages,
+  type SelectedColorLike,
+} from "@/lib/product-gallery";
 
 const CARD_STATUS: Record<
   ProductStatus,
@@ -39,25 +48,45 @@ const SWIPE_THRESHOLD = 40;
 const ARROW_CLASS =
   "absolute top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-zinc-900 opacity-100 shadow-sm backdrop-blur transition hover:bg-white focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100";
 
-export function ProductCard({ product }: { product: Product }) {
-  const images = parseImages(product.image_url);
+export function ProductCard({
+  product,
+  onQuickView,
+}: {
+  product: Product;
+  onQuickView?: (product: Product) => void;
+}) {
+  const gallery = parseImages(product.image_url);
   const colors = parseColors(product.color);
   const storages = parseVariants(product.storage);
+  const colorGalleries = parseColorGalleries(product.color_galleries);
 
   const cardRef = useRef<HTMLElement>(null);
   const swipeRef = useRef<{ x: number; y: number; pointerId: number } | null>(
     null,
   );
+  const swipeMovedRef = useRef(false);
   const [imageIndex, setImageIndex] = useState(0);
   const [imageFailed, setImageFailed] = useState(false);
-  const [selectedColor, setSelectedColor] = useState(colors[0] ?? "");
+  const [selectedColor, setSelectedColor] = useState<SelectedColorLike>(
+    colors[0] ?? "",
+  );
   const [selectedStorage, setSelectedStorage] = useState(storages[0] ?? "");
 
+  const activeImages = resolveColorImages(
+    selectedColor,
+    colors,
+    colorGalleries,
+    gallery,
+  );
+
   const isOutOfStock = product.status === "out_of_stock";
-  const currentImage = images[imageIndex] ?? images[0] ?? null;
+  const safeIndex =
+    activeImages.length > 0
+      ? Math.min(Math.max(imageIndex, 0), activeImages.length - 1)
+      : 0;
+  const currentImage = activeImages[safeIndex] ?? product.image_url ?? null;
   const showImage = Boolean(currentImage) && !imageFailed;
-  const canBrowse = images.length > 1 && showImage;
-  const showArrows = images.length >= 3 && showImage;
+  const showNavigation = activeImages.length > 1 && showImage;
   const status = CARD_STATUS[product.status];
   const title = formatTitle(product.title);
 
@@ -67,13 +96,13 @@ export function ProductCard({ product }: { product: Product }) {
     storage:
       selectedStorage ||
       (product.storage ? formatTitle(product.storage) : null),
-    color: selectedColor || null,
+    color: colorNameOf(selectedColor) || null,
     price: product.price,
   };
   const whatsappUrl = buildProductWhatsAppLink(productLinkData);
 
   function goToImage(next: number) {
-    const total = images.length;
+    const total = activeImages.length;
     if (total === 0) return;
     const wrapped = ((next % total) + total) % total;
     setImageFailed(false);
@@ -81,15 +110,19 @@ export function ProductCard({ product }: { product: Product }) {
   }
 
   function handleColorSelect(color: string) {
+    console.log("👉 COLOR PRESIONADO:", color);
+    console.log("📸 DATOS GALERÍA:", product.color_galleries);
+
+    if (color === colorNameOf(selectedColor)) return;
+
     setSelectedColor(color);
-    const colorIndex = colors.indexOf(color);
-    if (images.length > 1 && colorIndex >= 0) {
-      goToImage(Math.min(colorIndex, images.length - 1));
-    }
+    setImageIndex(0);
+    setImageFailed(false);
   }
 
   function handleMediaPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
-    if (!canBrowse || !event.isPrimary) return;
+    swipeMovedRef.current = false;
+    if (!showNavigation || !event.isPrimary) return;
     if ((event.target as HTMLElement).closest("button")) return;
 
     swipeRef.current = {
@@ -118,7 +151,16 @@ export function ProductCard({ product }: { product: Product }) {
       return;
     }
 
-    goToImage(imageIndex + (deltaX < 0 ? 1 : -1));
+    swipeMovedRef.current = true;
+    goToImage(safeIndex + (deltaX < 0 ? 1 : -1));
+  }
+
+  function handleMediaClick(event: ReactMouseEvent<HTMLDivElement>) {
+    if (!onQuickView) return;
+    if (swipeMovedRef.current) return;
+    if ((event.target as HTMLElement).closest("button")) return;
+
+    onQuickView(product);
   }
 
   function handlePointerMove(event: ReactPointerEvent<HTMLElement>) {
@@ -164,6 +206,17 @@ export function ProductCard({ product }: { product: Product }) {
         onPointerDown={handleMediaPointerDown}
         onPointerUp={handleMediaPointerUp}
         onPointerCancel={handleMediaPointerUp}
+        onClick={handleMediaClick}
+        role={onQuickView ? "button" : undefined}
+        tabIndex={onQuickView ? 0 : undefined}
+        aria-label={onQuickView ? `Ver detalles de ${title}` : undefined}
+        onKeyDown={(event) => {
+          if (!onQuickView) return;
+          if (event.key !== "Enter" && event.key !== " ") return;
+
+          event.preventDefault();
+          onQuickView(product);
+        }}
       >
         {showImage ? (
           <img
@@ -192,11 +245,11 @@ export function ProductCard({ product }: { product: Product }) {
           {status.label}
         </span>
 
-        {showArrows ? (
+        {showNavigation ? (
           <>
             <button
               type="button"
-              onClick={() => goToImage(imageIndex - 1)}
+              onClick={() => goToImage(safeIndex - 1)}
               aria-label="Imagen anterior"
               className={`${ARROW_CLASS} left-2`}
             >
@@ -217,7 +270,7 @@ export function ProductCard({ product }: { product: Product }) {
             </button>
             <button
               type="button"
-              onClick={() => goToImage(imageIndex + 1)}
+              onClick={() => goToImage(safeIndex + 1)}
               aria-label="Imagen siguiente"
               className={`${ARROW_CLASS} right-2`}
             >
@@ -239,20 +292,20 @@ export function ProductCard({ product }: { product: Product }) {
           </>
         ) : null}
 
-        {images.length > 1 ? (
+        {showNavigation ? (
           <div className="absolute bottom-2.5 left-2.5 z-10 flex items-center gap-1.5">
-            {images.map((image, position) => (
+            {activeImages.map((image, position) => (
               <button
                 key={image}
                 type="button"
                 onClick={() => goToImage(position)}
                 aria-label={`Ver imagen ${position + 1}`}
-                aria-pressed={imageIndex === position}
+                aria-pressed={safeIndex === position}
                 className="-m-1.5 p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900"
               >
                 <span
                   className={`block h-1.5 rounded-full transition-all ${
-                    imageIndex === position
+                    safeIndex === position
                       ? "w-4 bg-zinc-950/80"
                       : "w-1.5 bg-zinc-950/30 hover:bg-zinc-950/50"
                   }`}
@@ -262,9 +315,9 @@ export function ProductCard({ product }: { product: Product }) {
           </div>
         ) : null}
 
-        {showArrows ? (
+        {showNavigation ? (
           <span className="absolute bottom-2.5 right-2.5 z-10 rounded-full bg-zinc-950/60 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-white backdrop-blur">
-            {imageIndex + 1}/{images.length}
+            {safeIndex + 1}/{activeImages.length}
           </span>
         ) : null}
       </div>
@@ -272,7 +325,17 @@ export function ProductCard({ product }: { product: Product }) {
       <div className="flex flex-1 flex-col gap-2 p-3 sm:gap-2.5 sm:p-4">
         <div>
           <h3 className="line-clamp-2 text-sm font-bold leading-snug text-zinc-900 sm:text-base">
-            {title}
+            {onQuickView ? (
+              <button
+                type="button"
+                onClick={() => onQuickView(product)}
+                className="text-left transition-colors hover:text-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900"
+              >
+                {title}
+              </button>
+            ) : (
+              title
+            )}
           </h3>
           <p className="mt-1 truncate text-[11px] text-zinc-500 sm:text-xs">
             {product.brand}
@@ -289,12 +352,12 @@ export function ProductCard({ product }: { product: Product }) {
           />
         ) : null}
 
-        {colors.length > 0 ? (
+        {colors.length > 1 ? (
           <VariantPicker
             accent
             label="Color"
             options={colors}
-            selected={selectedColor}
+            selected={colorNameOf(selectedColor)}
             onSelect={handleColorSelect}
           />
         ) : null}
@@ -354,7 +417,7 @@ function VariantPicker({
       >
         <span>{label}:</span>
         {selected ? (
-          <span className={accent ? "text-amber-500" : undefined}>
+          <span className={accent ? "font-semibold" : undefined}>
             {selected}
           </span>
         ) : null}

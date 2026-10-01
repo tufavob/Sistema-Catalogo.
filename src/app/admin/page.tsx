@@ -30,7 +30,7 @@ export default async function AdminPage() {
       supabase
         .from("products")
         .select(
-          "id, title, brand, model, storage, color, price, stock, status, image_url, description, category_id, created_at, categories(id, name, slug)",
+          "id, title, brand, model, storage, color, price, stock, status, image_url, color_galleries, description, category_id, created_at, categories(id, name, slug)",
         )
         .order("created_at", { ascending: false }),
       supabase

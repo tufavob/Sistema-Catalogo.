@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { ChangeEvent, FormEvent } from "react";
+import type { ChangeEvent, DragEvent, FormEvent } from "react";
 import type {
   Category,
   ProductInput,
@@ -9,7 +9,11 @@ import type {
   ProductWithCategory,
 } from "@/types/database";
 import { createProduct, updateProduct } from "@/app/admin/actions";
-import { uploadProductImage } from "@/lib/supabase/browser";
+import {
+  isSupportedImageType,
+  SUPABASE_STORAGE_BUCKET,
+  uploadProductImage,
+} from "@/lib/supabase/browser";
 import { formatTitle, parseColors, parseImages } from "@/lib/utils";
 import { CATEGORY_LABELS, FEATURED_CATEGORIES } from "@/lib/categories";
 import { PhoneIcon } from "@/components/icons";
@@ -49,6 +53,7 @@ type FormState = {
   description: string;
   category_id: string;
   image_url: string;
+  color_galleries: string;
 };
 
 export function ProductFormModal({
@@ -78,6 +83,12 @@ export function ProductFormModal({
       categories[0]?.id ??
       "",
     image_url: product?.image_url ?? "",
+    color_galleries:
+      typeof product?.color_galleries === "string"
+        ? product.color_galleries
+        : product?.color_galleries
+          ? JSON.stringify(product.color_galleries, null, 2)
+          : "",
   });
 
   const [saving, setSaving] = useState(false);
@@ -85,26 +96,44 @@ export function ProductFormModal({
   const [formError, setFormError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [previewFailed, setPreviewFailed] = useState(false);
+  const [imageTab, setImageTab] = useState<"upload" | "url">("upload");
+  const [urlDraft, setUrlDraft] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.target.files ?? []);
+  function appendImages(urls: string[]) {
+    if (urls.length === 0) return;
+    const existing = parseImages(form.image_url);
+    setField("image_url", [...existing, ...urls].join(", "));
+    setPreviewFailed(false);
+  }
+
+  function removeImage(target: string) {
+    const remaining = parseImages(form.image_url).filter(
+      (url) => url !== target,
+    );
+    setField("image_url", remaining.join(", "));
+    setPreviewFailed(false);
+  }
+
+  async function uploadFiles(files: File[]) {
     if (files.length === 0) return;
 
     setUploading(true);
     setUploadError(null);
 
     try {
-      const urls = await Promise.all(
-        files.map((file) => uploadProductImage(file)),
-      );
-      const existing = parseImages(form.image_url);
-      setField("image_url", [...existing, ...urls].join(", "));
-      setPreviewFailed(false);
+      const urls: string[] = [];
+
+      for (const file of files) {
+        urls.push(await uploadProductImage(file));
+      }
+
+      appendImages(urls);
     } catch (error) {
       setUploadError(
         error instanceof Error
@@ -117,6 +146,68 @@ export function ProductFormModal({
         fileInputRef.current.value = "";
       }
     }
+  }
+
+  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    await uploadFiles(Array.from(event.target.files ?? []));
+  }
+
+  async function handleDrop(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    setIsDragging(false);
+
+    const files = Array.from(event.dataTransfer.files ?? []);
+    const invalid = files.filter((file) => !isSupportedImageType(file));
+
+    if (invalid.length > 0) {
+      setUploadError(
+        `Archivo no permitido: ${invalid.map((file) => file.name).join(", ")}. ` +
+          "Usa JPG, PNG, WEBP, GIF o AVIF.",
+      );
+      if (files.length === invalid.length) return;
+    }
+
+    await uploadFiles(files.filter(isSupportedImageType));
+  }
+
+  function addUrlFromDraft() {
+    const raw = urlDraft.trim();
+
+    if (!raw) {
+      setUploadError("Escribe la URL de la imagen.");
+      return;
+    }
+
+    const candidates = raw
+      .split(/[\n,]+/)
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    const invalid = candidates.filter((value) => !/^https?:\/\//i.test(value));
+
+    if (invalid.length === 0) {
+      setUploadError(
+        "Cada URL debe empezar con http:// o https:// (ej: https://ejemplo.com/foto.jpg).",
+      );
+      return;
+    }
+
+    if (invalid.length < candidates.length) {
+      setUploadError(`URL inválida ignorada: ${invalid.join(", ")}`);
+    }
+
+    const existing = parseImages(form.image_url);
+    const unique = candidates.filter(
+      (value) => /^https?:\/\//i.test(value) && !existing.includes(value),
+    );
+
+    if (unique.length === 0) {
+      setUploadError("Esa URL ya está en la galería del producto.");
+      return;
+    }
+
+    appendImages(unique);
+    setUrlDraft("");
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -152,6 +243,7 @@ export function ProductFormModal({
       description: form.description || null,
       category_id: form.category_id || null,
       image_url: form.image_url || null,
+      color_galleries: form.color_galleries.trim() || null,
     };
 
     setSaving(true);
@@ -431,44 +523,166 @@ export function ProductFormModal({
               </div>
 
               <div className="min-w-0 flex-1 space-y-3">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  className="inline-flex items-center gap-2 rounded-xl border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-60"
+                <div
+                  role="tablist"
+                  aria-label="Origen de las imágenes"
+                  className="inline-flex rounded-xl border border-zinc-300 bg-zinc-100 p-1"
                 >
-                  {uploading
-                    ? "Subiendo imágenes…"
-                    : "Subir imágenes (.jpg, .png, .webp)"}
-                </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={imageTab === "upload"}
+                    onClick={() => setImageTab("upload")}
+                    className={`rounded-lg px-3.5 py-1.5 text-xs font-bold transition ${
+                      imageTab === "upload"
+                        ? "bg-white text-zinc-900 shadow-sm"
+                        : "text-zinc-500 hover:text-zinc-800"
+                    }`}
+                  >
+                    Archivo local
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={imageTab === "url"}
+                    onClick={() => setImageTab("url")}
+                    className={`rounded-lg px-3.5 py-1.5 text-xs font-bold transition ${
+                      imageTab === "url"
+                        ? "bg-white text-zinc-900 shadow-sm"
+                        : "text-zinc-500 hover:text-zinc-800"
+                    }`}
+                  >
+                    URL directa
+                  </button>
+                </div>
+
+                {imageTab === "upload" ? (
+                  <div
+                    onDragOver={(event) => {
+                      event.preventDefault();
+                      setIsDragging(true);
+                    }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={handleDrop}
+                    className={`rounded-xl border-2 border-dashed px-4 py-5 text-center transition ${
+                      isDragging
+                        ? "border-emerald-500 bg-emerald-50"
+                        : "border-zinc-300 bg-zinc-50"
+                    }`}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                    <p className="text-xs leading-5 text-zinc-600">
+                      Arrastra tus imágenes aquí o
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="mt-2 inline-flex items-center gap-2 rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-60"
+                    >
+                      {uploading
+                        ? "Subiendo imágenes…"
+                        : "Seleccionar archivos"}
+                    </button>
+                    <p className="mt-2 text-[11px] leading-4 text-zinc-500">
+                      JPG, PNG, WEBP, GIF o AVIF · máx. 5 MB por archivo. Se
+                      guardan en el bucket público “{SUPABASE_STORAGE_BUCKET}”
+                      de Supabase Storage.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <input
+                        type="text"
+                        inputMode="url"
+                        value={urlDraft}
+                        onChange={(event) => setUrlDraft(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            addUrlFromDraft();
+                          }
+                        }}
+                        placeholder="https://ejemplo.com/foto.jpg"
+                        aria-label="URL de la imagen"
+                        className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                      />
+                      <button
+                        type="button"
+                        onClick={addUrlFromDraft}
+                        className="shrink-0 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700"
+                      >
+                        Agregar
+                      </button>
+                    </div>
+                    <p className="text-xs leading-5 text-zinc-500">
+                      Pega una o varias URLs separadas por comas o saltos de
+                      línea. Se agregan directo a la galería, sin pasar por
+                      Storage.
+                    </p>
+                  </div>
+                )}
+
                 {uploadError ? (
-                  <p className="text-xs font-medium text-red-600">
+                  <p
+                    role="alert"
+                    className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium leading-5 text-red-700"
+                  >
                     {uploadError}
                   </p>
                 ) : null}
-                <input
-                  type="text"
-                  inputMode="url"
-                  value={form.image_url}
-                  onChange={(event) => {
-                    setField("image_url", event.target.value);
-                    setPreviewFailed(false);
-                  }}
-                  placeholder="URLs de imagen, separadas por comas (opcional)"
-                  className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                />
-                <p className="text-xs leading-5 text-zinc-500">
-                  Puedes pegar varias URLs separadas por comas para tener una
-                  galería de fotos (ej: foto1.jpg, foto2.jpg)
-                </p>
+
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                    Galería ({imageCount})
+                  </p>
+                  <ul className="mt-2 space-y-1.5">
+                    {parseImages(form.image_url).map((url, position) => (
+                      <li
+                        key={url}
+                        className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-2 py-1.5"
+                      >
+                        <span className="w-5 shrink-0 text-[11px] font-bold text-zinc-400">
+                          {position + 1}
+                        </span>
+                        <img
+                          src={url}
+                          alt=""
+                          loading="lazy"
+                          className="h-8 w-8 shrink-0 rounded object-cover"
+                          onError={(event) => {
+                            event.currentTarget.style.visibility = "hidden";
+                          }}
+                        />
+                        <span className="min-w-0 flex-1 truncate text-[11px] text-zinc-600">
+                          {url}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeImage(url)}
+                          aria-label={`Quitar imagen ${position + 1}`}
+                          className="shrink-0 rounded-md px-2 py-1 text-[11px] font-bold text-red-600 transition hover:bg-red-50"
+                        >
+                          Quitar
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  {imageCount === 0 ? (
+                    <p className="mt-2 text-xs text-zinc-500">
+                      Sin imágenes todavía. Agrega al menos una para que el
+                      producto se vea en el catálogo.
+                    </p>
+                  ) : null}
+                </div>
               </div>
             </div>
           </div>

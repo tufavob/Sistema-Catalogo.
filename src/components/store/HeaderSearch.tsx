@@ -5,6 +5,7 @@ import type { KeyboardEvent as ReactKeyboardEvent, RefObject } from "react";
 import { useStore } from "@/components/store/StoreProvider";
 import { CloseIcon, SearchIcon } from "@/components/icons";
 import { FEATURED_CATEGORIES } from "@/lib/categories";
+import { SOCIAL_LINKS } from "@/lib/social";
 
 const CATALOG_ID = "catalogo";
 
@@ -137,11 +138,14 @@ export function HeaderSearch() {
           />
 
           {showQuickAccess ? (
-            <QuickCategories
-              activeCategory={category}
-              onSelect={handleSelectCategory}
-              className="mt-3"
-            />
+            <>
+              <QuickCategories
+                activeCategory={category}
+                onSelect={handleSelectCategory}
+                className="mt-3"
+              />
+              <MobileSocialLinks onSelect={closeSearch} />
+            </>
           ) : null}
         </div>
       ) : null}
@@ -189,6 +193,39 @@ function QuickCategories({
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function MobileSocialLinks({ onSelect }: { onSelect: () => void }) {
+  return (
+    <div className="mt-3 rounded-2xl border border-emerald-900/70 bg-emerald-950 p-3 shadow-2xl">
+      <p className="px-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-100/70">
+        Síguenos
+      </p>
+
+      <ul className="mt-2 flex flex-wrap gap-2">
+        {SOCIAL_LINKS.map(({ label, href, Icon, placeholder }) => (
+          <li key={label}>
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={onSelect}
+              aria-label={
+                placeholder
+                  ? `${label} (próximamente)`
+                  : `${label} de Northumbria`
+              }
+              title={placeholder ? "Próximamente" : label}
+              className="flex h-11 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3.5 text-xs font-semibold text-zinc-200 transition-colors hover:border-amber-400/60 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {label}
+            </a>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -78,7 +78,7 @@ export async function listProducts(): Promise<{
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, title, brand, model, storage, color, price, stock, status, image_url, description, category_id, created_at, categories(id, name, slug)",
+        "id, title, brand, model, storage, color, price, stock, status, image_url, color_galleries, description, category_id, created_at, categories(id, name, slug)",
       )
       .order("created_at", { ascending: false });
 
@@ -115,6 +115,7 @@ export async function createProduct(
       description: input.description?.trim() || null,
       category_id: input.category_id || null,
       image_url: input.image_url?.trim() || null,
+      color_galleries: input.color_galleries?.trim() || null,
     });
 
     if (error) {
@@ -155,6 +156,7 @@ export async function updateProduct(
         description: input.description?.trim() || null,
         category_id: input.category_id || null,
         image_url: input.image_url?.trim() || null,
+        color_galleries: input.color_galleries?.trim() || null,
       })
       .eq("id", id);
 
