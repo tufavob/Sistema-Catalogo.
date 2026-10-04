@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { SOCIAL_LINKS } from "@/lib/social";
 import { WhatsAppIcon } from "@/components/icons";
 import { Reveal } from "@/components/motion/Reveal";
@@ -23,11 +24,15 @@ export function Footer() {
       <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 md:py-14">
         <div className="grid gap-8 md:grid-cols-3 md:gap-10">
           <Reveal>
-            <div>
-              <p className="text-lg font-black tracking-tight text-white">
-                Northumbria
-              </p>
-              <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-amber-400">
+            <div className="flex flex-col items-center md:items-start">
+              <Image
+                alt="Northumbria"
+                src="/logo.jpeg"
+                width={150}
+                height={38}
+                className="h-8 w-auto object-contain opacity-90"
+              />
+              <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-amber-400">
                 Buen Muchacho
               </p>
               <p className="mt-4 max-w-xs text-sm leading-6 text-zinc-300">

@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
+import Image from "next/image";
 import {
   BadgeCheckIcon,
   ShieldCheckIcon,
@@ -71,59 +72,53 @@ export function Hero() {
         ref={cardRef}
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
-        className="relative isolate w-full overflow-hidden rounded-3xl border border-emerald-900/70 bg-emerald-950 text-white shadow-2xl"
+        className="relative isolate w-full overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950 text-white shadow-2xl"
       >
-        <div
-          aria-hidden="true"
-          className="aurora aurora-emerald -left-24 -top-24 h-72 w-72"
+        {/* IMAGEN DE FONDO COMPLETA */}
+        <Image
+          alt="Northumbria Logo Fondo"
+          src="/logo.jpeg"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center -z-20 opacity-80"
         />
-        <div
-          aria-hidden="true"
-          className="aurora aurora-amber -right-20 -top-12 h-60 w-60"
-        />
-        <div
-          aria-hidden="true"
-          className="aurora aurora-deep bottom-[-6rem] left-1/3 h-72 w-72"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 -z-10 opacity-[0.05] [background-image:linear-gradient(to_right,white_1px,transparent_1px),linear-gradient(to_bottom,white_1px,transparent_1px)] [background-size:48px_48px]"
-        />
-        <div aria-hidden="true" className="hero-spotlight -z-10" />
 
-        <div className="mx-auto flex min-h-[400px] w-full max-w-7xl flex-col justify-center px-4 py-10 sm:px-6 sm:py-14 md:min-h-[460px] md:py-16">
-          <div className="max-w-xl">
-            <p
-              className="hero-enter inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-100"
-              style={{ "--d": "0ms" } as never}
-            >
-              <span className="live-dot h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              Tienda abierta
-            </p>
+        {/* OVERLAY OSCURO */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-black/60 -z-10"
+        />
 
+        {/* EFECTO DE REJILLA SUTIL */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 opacity-[0.03] [background-image:linear-gradient(to_right,white_1px,transparent_1px),linear-gradient(to_bottom,white_1px,transparent_1px)] [background-size:48px_48px]"
+        />
+
+        {/* CONTENIDO PRINCIPAL */}
+        <div className="relative z-10 mx-auto flex min-h-[400px] w-full max-w-7xl flex-col justify-center px-4 py-8 sm:px-6 sm:py-10 md:min-h-[480px] md:py-12">
+          <div className="mx-auto flex w-full max-w-2xl flex-col items-center text-center">
+            {/* TÍTULO EN AMARILLO (text-amber-400) */}
             <h1
-              className="hero-enter mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl md:text-5xl"
+              className="hero-enter text-3xl font-black uppercase tracking-tight text-amber-400 drop-shadow-md sm:text-4xl md:text-5xl"
               style={{ "--d": "90ms" } as never}
             >
               Northumbria
             </h1>
+
+            {/* DESCRIPCIÓN DE LA MARCA */}
             <p
-              className="hero-enter mt-1.5 text-xs font-semibold uppercase tracking-[0.3em] text-amber-400 sm:text-sm"
+              className="hero-enter mt-3 max-w-md text-sm leading-6 text-zinc-200 drop-shadow sm:text-center"
               style={{ "--d": "180ms" } as never}
             >
-              Buen Muchacho
-            </p>
-            <p
-              className="hero-enter mt-3 max-w-md text-sm leading-6 text-zinc-300"
-              style={{ "--d": "260ms" } as never}
-            >
-              Celulares, accesorios seleccionados y streetwear exclusivo con
-              envío asegurado y atención inmediata.
+              Celulares, accesorios seleccionados y ropa exclusiva con envío
+              asegurado y atención inmediata.
             </p>
 
             <div
               className="hero-enter mt-6 flex flex-col gap-3 sm:flex-row"
-              style={{ "--d": "340ms" } as never}
+              style={{ "--d": "260ms" } as never}
             >
               <a
                 ref={ctaRef}
@@ -143,7 +138,7 @@ export function Hero() {
 
           <ul
             className="hero-enter mt-8 grid grid-cols-3 gap-2 border-t border-white/10 pt-5 sm:mt-auto sm:gap-3 sm:pt-6"
-            style={{ "--d": "440ms" } as never}
+            style={{ "--d": "340ms" } as never}
           >
             {TRUST_BADGES.map(({ icon: Icon, title, detail }) => (
               <li
@@ -155,7 +150,7 @@ export function Hero() {
                   <span className="block text-[11px] font-semibold text-white sm:text-xs">
                     {title}
                   </span>
-                  <span className="mt-0.5 hidden text-[11px] leading-4 text-emerald-100/80 sm:block">
+                  <span className="mt-0.5 hidden text-[11px] leading-4 text-zinc-300 sm:block">
                     {detail}
                   </span>
                 </span>
@@ -165,7 +160,8 @@ export function Hero() {
         </div>
       </section>
 
-      <div className="marquee mt-3 w-full overflow-hidden rounded-2xl border border-emerald-900/70 bg-emerald-950 py-2.5 sm:mt-4">
+      {/* MARQUEE INFERIOR */}
+      <div className="marquee mt-3 w-full overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 py-2.5 sm:mt-4">
         <div className="marquee-track gap-10">
           {[0, 1].map((copy) => (
             <div
@@ -176,7 +172,7 @@ export function Hero() {
               {HIGHLIGHTS.map((highlight) => (
                 <span
                   key={`${copy}-${highlight}`}
-                  className="flex items-center gap-10 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-100/85"
+                  className="flex items-center gap-10 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-300"
                 >
                   {highlight}
                   <span className="h-1 w-1 rounded-full bg-amber-400" />

@@ -92,7 +92,8 @@ export function HeaderSearch() {
 
   return (
     <>
-      <div className="relative hidden max-w-sm flex-1 sm:block">
+      {/* CAMPO DE BÚSQUEDA DESKTOP (SIN LOGO AL COSTADO) */}
+      <div className="relative hidden w-full max-w-md flex-1 sm:block">
         <SearchField
           inputRef={desktopRef}
           query={query}
@@ -111,12 +112,14 @@ export function HeaderSearch() {
         ) : null}
       </div>
 
+      {/* BOTÓN DE BÚSQUEDA MÓVIL */}
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
+        aria-controls="mobile-search"
         aria-label="Buscar productos"
-        className="flex h-11 w-11 items-center justify-center rounded-2xl text-zinc-200 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 sm:hidden"
+        className="ml-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-zinc-300 transition-colors hover:bg-white/10 hover:text-white sm:hidden"
       >
         {open ? (
           <CloseIcon className="h-5 w-5" />
@@ -125,9 +128,10 @@ export function HeaderSearch() {
         )}
       </button>
 
+      {/* DESPLEGABLE MÓVIL */}
       {open ? (
         <div
-          className="fixed inset-x-0 z-50 border-b border-emerald-900/70 bg-emerald-950 p-3 sm:hidden"
+          className="fixed inset-x-0 z-50 border-b border-zinc-800 bg-zinc-950 p-3 sm:hidden"
           style={{ top: "var(--header-height)" }}
         >
           <SearchField
@@ -165,9 +169,9 @@ function QuickCategories({
   return (
     <div
       aria-label="Categorías principales"
-      className={`rounded-2xl border border-emerald-900/70 bg-emerald-950 p-3 shadow-2xl ${className}`}
+      className={`rounded-2xl border border-zinc-800 bg-zinc-950 p-3 shadow-2xl ${className}`}
     >
-      <p className="px-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-100/70">
+      <p className="px-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-400">
         Categorías principales
       </p>
 
@@ -182,7 +186,7 @@ function QuickCategories({
               tabIndex={-1}
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => onSelect(name)}
-              className={`rounded-full border px-3.5 py-2 text-xs font-semibold transition-colors ${
+              className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                 isActive
                   ? "border-amber-400/60 bg-amber-400/15 text-amber-300"
                   : "border-white/10 bg-white/5 text-zinc-200 hover:bg-white/10 hover:text-white"
@@ -199,8 +203,8 @@ function QuickCategories({
 
 function MobileSocialLinks({ onSelect }: { onSelect: () => void }) {
   return (
-    <div className="mt-3 rounded-2xl border border-emerald-900/70 bg-emerald-950 p-3 shadow-2xl">
-      <p className="px-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-100/70">
+    <div className="mt-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-3 shadow-2xl">
+      <p className="px-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-400">
         Síguenos
       </p>
 
@@ -218,7 +222,7 @@ function MobileSocialLinks({ onSelect }: { onSelect: () => void }) {
                   : `${label} de Northumbria`
               }
               title={placeholder ? "Próximamente" : label}
-              className="flex h-11 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3.5 text-xs font-semibold text-zinc-200 transition-colors hover:border-amber-400/60 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
+              className="flex h-10 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3.5 text-xs font-semibold text-zinc-200 transition-colors hover:border-amber-400/60 hover:bg-white/10 hover:text-white"
             >
               <Icon className="h-4 w-4 shrink-0" />
               {label}
@@ -246,8 +250,23 @@ function SearchField({
   onBlur?: () => void;
 }) {
   return (
-    <div className="flex h-11 w-full items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 text-zinc-300 transition-colors focus-within:border-emerald-500/60 focus-within:bg-white/10">
-      <SearchIcon className="h-4 w-4 shrink-0" />
+    <div className="relative flex h-10 w-full items-center">
+      <div className="pointer-events-none absolute left-3 text-zinc-400">
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
+      </div>
       <input
         ref={inputRef}
         type="text"
@@ -260,21 +279,21 @@ function SearchField({
         onKeyDown={onKeyDown}
         onFocus={onFocus}
         onBlur={onBlur}
-        placeholder="Buscar productos..."
+        placeholder="Buscar en el catálogo..."
         aria-label="Buscar productos"
-        className="w-full min-w-0 bg-transparent text-sm text-white outline-none placeholder:text-zinc-400"
+        className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-2 pl-9 pr-10 text-sm text-white placeholder-zinc-400 focus:border-amber-400 focus:outline-none"
       />
       {query ? (
         <button
           type="button"
           onClick={() => onQueryChange("")}
           aria-label="Limpiar búsqueda"
-          className="shrink-0 rounded-full p-0.5 text-zinc-300 transition-colors hover:text-white"
+          className="absolute right-3 shrink-0 rounded-full p-0.5 text-zinc-400 transition-colors hover:text-white"
         >
           <CloseIcon className="h-4 w-4" />
         </button>
       ) : (
-        <kbd className="hidden shrink-0 rounded border border-white/15 px-1.5 font-sans text-[10px] font-medium text-zinc-300 lg:block">
+        <kbd className="absolute right-3 hidden shrink-0 rounded border border-white/15 px-1.5 font-sans text-[10px] font-medium text-zinc-400 lg:block">
           ⌘K
         </kbd>
       )}

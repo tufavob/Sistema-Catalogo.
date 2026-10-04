@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Inter } from "next/font/google";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
@@ -38,23 +39,20 @@ export default function RootLayout({
       <body className="flex min-h-screen flex-col bg-zinc-50 font-sans text-zinc-900 antialiased">
         <StoreProvider>
           <ScrollProgress />
-          <header className="sticky top-0 z-50 border-b border-emerald-900/70 bg-emerald-950">
+          <header className="sticky top-0 z-50 border-b border-emerald-900/30 bg-[#02130d]/90 backdrop-blur-md">
             <div className="relative mx-auto flex h-14 w-full max-w-7xl items-center gap-3 px-4 sm:px-6">
               <Link
                 href="/"
                 className="flex shrink-0 items-center gap-2 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
               >
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-400 text-xs font-black text-emerald-950">
-                  N
-                </span>
-                <span className="flex min-w-0 flex-col leading-none">
-                  <span className="truncate text-[13px] font-black uppercase tracking-[0.2em] text-white">
-                    Northumbria
-                  </span>
-                  <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-amber-400">
-                    Buen Muchacho
-                  </span>
-                </span>
+                <Image
+                  alt="Northumbria Logo"
+                  src="/logo.jpeg"
+                  width={180}
+                  height={45}
+                  priority
+                  className="h-10 w-auto object-contain transition-transform hover:scale-105"
+                />
               </Link>
 
               <HeaderSearch />
