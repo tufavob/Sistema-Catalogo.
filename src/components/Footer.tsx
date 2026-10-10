@@ -32,9 +32,7 @@ export function Footer() {
                 height={38}
                 className="h-8 w-auto object-contain opacity-90"
               />
-              <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-amber-400">
-                Buen Muchacho
-              </p>
+              <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-amber-400"></p>
               <p className="mt-4 max-w-xs text-sm leading-6 text-zinc-300">
                 Celulares, accesorios y streetwear exclusivo con envío
                 asegurado. Pedidos directos por WhatsApp, sin intermediarios.
@@ -123,8 +121,8 @@ export function Footer() {
 
         <div className="mt-10 flex flex-col gap-2 border-t border-white/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-zinc-300">
-            © {new Date().getFullYear()} Northumbria · Buen Muchacho. Todos los
-            derechos reservados.
+            © {new Date().getFullYear()} Northumbria. Todos los derechos
+            reservados.
           </p>
           <p className="text-xs text-zinc-400">Compra directa, sin vueltas.</p>
         </div>

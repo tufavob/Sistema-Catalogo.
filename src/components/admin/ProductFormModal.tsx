@@ -183,23 +183,24 @@ export function ProductFormModal({
       .map((value) => value.trim())
       .filter(Boolean);
 
+    const validCandidates = candidates.filter((value) =>
+      /^https?:\/\//i.test(value),
+    );
     const invalid = candidates.filter((value) => !/^https?:\/\//i.test(value));
 
-    if (invalid.length === 0) {
+    if (validCandidates.length === 0) {
       setUploadError(
         "Cada URL debe empezar con http:// o https:// (ej: https://ejemplo.com/foto.jpg).",
       );
       return;
     }
 
-    if (invalid.length < candidates.length) {
+    if (invalid.length > 0) {
       setUploadError(`URL inválida ignorada: ${invalid.join(", ")}`);
     }
 
     const existing = parseImages(form.image_url);
-    const unique = candidates.filter(
-      (value) => /^https?:\/\//i.test(value) && !existing.includes(value),
-    );
+    const unique = validCandidates.filter((value) => !existing.includes(value));
 
     if (unique.length === 0) {
       setUploadError("Esa URL ya está en la galería del producto.");

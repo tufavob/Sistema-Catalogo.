@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     template: "%s | Northumbria",
   },
   description:
-    "Catálogo oficial de celulares y accesorios Northumbria, submarca Buen Muchacho. Equipos nuevos con garantía y pedidos directos por WhatsApp.",
+    "Catálogo oficial de celulares y accesorios Northumbria. Equipos nuevos con garantía y pedidos directos por WhatsApp.",
   verification: {
     google: "OUotw3kajTMcC8JO0-UvTnCwzWlr0tRcXN6Z5epKXFk",
   },

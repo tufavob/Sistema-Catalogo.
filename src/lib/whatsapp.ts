@@ -15,13 +15,11 @@ export function buildProductWhatsAppLink(
     color?: string | null;
     price: number;
   },
-  productUrl?: string
+  productUrl?: string,
 ): string {
   const url =
     productUrl ||
-    (SITE_URL
-      ? `${SITE_URL.replace(/\/$/, "")}#producto-${product.id}`
-      : "");
+    (SITE_URL ? `${SITE_URL.replace(/\/$/, "")}#producto-${product.id}` : "");
 
   const mobileEmoji = "\uD83D\uDCF1";
   const storageEmoji = "\uD83D\uDCBE";
@@ -29,7 +27,7 @@ export function buildProductWhatsAppLink(
   const linkEmoji = "\uD83D\uDD17";
 
   const lines = [
-    "Hola Buen Muchacho, estoy interesado en el siguiente producto:",
+    "Hola Northumbria, estoy interesado en el siguiente producto:",
     "",
     `${mobileEmoji} *${product.title}*`,
     product.storage ? `${storageEmoji} Capacidad: ${product.storage}` : null,

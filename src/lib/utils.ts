@@ -27,16 +27,24 @@ export function parseColors(color: string | null | undefined): string[] {
   if (!color) return [];
   return color
     .split(",")
-    .map((part) => formatTitle(part.trim()))
-    .filter(Boolean);
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0)
+    .map((part) => formatTitle(part));
 }
 
 export function parseImages(imageUrl: string | null | undefined): string[] {
   if (!imageUrl) return [];
-  return imageUrl
+  const urls = imageUrl
     .split(",")
     .map((url) => url.trim())
-    .filter(Boolean);
+    .filter(
+      (url) =>
+        url.startsWith("http://") ||
+        url.startsWith("https://") ||
+        url.startsWith("/"),
+    );
+
+  return urls.length > 0 ? urls : ["/placeholder.png"];
 }
 
 export function parseColorGalleries(
