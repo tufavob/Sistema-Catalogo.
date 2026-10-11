@@ -7,7 +7,7 @@ import {
 
 let browserClient: ReturnType<typeof createBrowserClient> | null = null;
 
-function getBrowserClient() {
+export function getBrowserClient() {
   if (!browserClient) {
     browserClient = createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }

@@ -7,6 +7,16 @@ export type Category = {
 
 export type ProductStatus = "available" | "out_of_stock" | "promo";
 
+export interface Review {
+  id: string;
+  product_id: string;
+  customer_name: string;
+  rating: number; // 1 a 5
+  comment: string;
+  is_verified?: boolean;
+  created_at: string;
+}
+
 export type Product = {
   id: string;
   title: string;

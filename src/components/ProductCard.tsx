@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
   MouseEvent as ReactMouseEvent,
   PointerEvent as ReactPointerEvent,
@@ -15,7 +15,9 @@ import {
   parseImages,
   parseVariants,
 } from "@/lib/utils";
-import { PhoneIcon, WhatsAppIcon } from "@/components/icons";
+import { PhoneIcon, StarIcon, WhatsAppIcon } from "@/components/icons";
+import { getBrowserClient } from "@/lib/supabase/browser";
+import type { Review } from "@/types/database";
 import {
   colorNameOf,
   resolveColorImages,
@@ -89,6 +91,38 @@ export function ProductCard({
   const showNavigation = activeImages.length > 1 && showImage;
   const status = CARD_STATUS[product.status];
   const title = formatTitle(product.title);
+
+  const [ratingData, setRatingData] = useState<{
+    avg: number;
+    count: number;
+  }>({ avg: 0, count: 0 });
+
+  useEffect(() => {
+    async function fetchRating() {
+      try {
+        const supabase = getBrowserClient();
+        const { data } = await supabase
+          .from("reviews")
+          .select("rating")
+          .eq("product_id", product.id);
+
+        if (data && data.length > 0) {
+          const count = data.length;
+          const avg =
+            data.reduce(
+              (sum: number, r: { rating: number | null | undefined }) =>
+                sum + Number(r.rating || 0),
+              0,
+            ) / count;
+          setRatingData({ avg: Number(avg.toFixed(1)), count });
+        }
+      } catch (err) {
+        // Ignore errors for rating display
+      }
+    }
+    fetchRating();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id]);
 
   const productLinkData = {
     id: product.id,
@@ -360,6 +394,26 @@ export function ProductCard({
             selected={colorNameOf(selectedColor)}
             onSelect={handleColorSelect}
           />
+        ) : null}
+
+        {ratingData.count > 0 ? (
+          <div className="flex items-center gap-1.5 text-xs text-zinc-600">
+            <div className="flex items-center gap-0.5">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <StarIcon
+                  key={star}
+                  className={`h-3.5 w-3.5 ${
+                    star <= Math.round(ratingData.avg)
+                      ? "fill-amber-400 text-amber-400"
+                      : "text-zinc-300"
+                  }`}
+                />
+              ))}
+            </div>
+            <span className="text-[11px] text-zinc-500">
+              {ratingData.avg} ({ratingData.count})
+            </span>
+          </div>
         ) : null}
 
         <p className="mt-auto pt-1 text-base font-bold text-zinc-900 sm:text-lg">
