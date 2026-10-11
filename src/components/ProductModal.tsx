@@ -13,7 +13,6 @@ import {
 } from "@/lib/utils";
 import { colorNameOf, resolveColorImages } from "@/lib/product-gallery";
 import { CloseIcon, PhoneIcon, WhatsAppIcon } from "@/components/icons";
-import { ProductReviews } from "@/components/ProductReviews";
 
 const STATUS_VIEW: Record<
   Product["status"],
@@ -395,8 +394,6 @@ export function ProductModal({
                     : "Pedir por WhatsApp"}
                 </span>
               </a>
-
-              <ProductReviews productId={product.id} />
             </div>
           </div>
         </div>
