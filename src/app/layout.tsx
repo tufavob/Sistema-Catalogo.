@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Inter } from "next/font/google";
-import { buildWhatsAppLink } from "@/lib/whatsapp";
+import { AdvisorPicker } from "@/components/AdvisorPicker";
 import { WhatsAppIcon } from "@/components/icons";
 import { Footer } from "@/components/Footer";
 import { StoreProvider } from "@/components/store/StoreProvider";
@@ -57,15 +57,15 @@ export default function RootLayout({
 
               <HeaderSearch />
 
-              <a
-                href={buildWhatsAppLink(headerMessage)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ml-auto inline-flex h-11 shrink-0 items-center gap-2 rounded-2xl bg-emerald-500 px-3 text-sm font-bold text-zinc-950 transition-colors hover:bg-emerald-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 sm:px-4"
+              <AdvisorPicker
+                message={headerMessage}
+                menuAlign="right"
+                wrapperClassName="ml-auto shrink-0"
+                className="inline-flex h-11 items-center gap-2 rounded-2xl bg-emerald-500 px-3 text-sm font-bold text-zinc-950 transition-colors hover:bg-emerald-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 sm:px-4"
               >
                 <WhatsAppIcon className="h-4 w-4" />
                 <span className="hidden sm:inline">Pedir</span>
-              </a>
+              </AdvisorPicker>
             </div>
           </header>
 

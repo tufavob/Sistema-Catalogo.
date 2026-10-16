@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Product } from "@/types/database";
 import { formatPrice } from "@/lib/format";
 import { buildProductWhatsAppLink } from "@/lib/whatsapp";
+import { ADVISORS } from "@/lib/constants";
 import {
   formatTitle,
   parseColorGalleries,
@@ -144,14 +145,6 @@ export function ProductModal({
     setImageIndex(0);
     setImageFailed(false);
   }
-
-  const whatsappUrl = buildProductWhatsAppLink({
-    id: product.id,
-    title,
-    storage: selectedStorage || null,
-    color: selectedColorName || null,
-    price: product.price,
-  });
 
   return (
     <div
@@ -361,39 +354,54 @@ export function ProductModal({
               </div>
             ) : null}
 
-            <div className="mt-auto space-y-6 pt-2">
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(event) => {
-                  const url = buildProductWhatsAppLink(
-                    {
-                      id: product.id,
-                      title,
-                      storage: selectedStorage || null,
-                      color: selectedColorName || null,
-                      price: product.price,
-                    },
-                    `${window.location.origin}${window.location.pathname}#producto-${product.id}`,
-                  );
-                  window.open(url, "_blank", "noopener,noreferrer");
-                  event.preventDefault();
-                }}
-                aria-label={
-                  isOutOfStock
-                    ? `Consultar disponibilidad de ${title} por WhatsApp`
-                    : `Pedir ${title} por WhatsApp`
-                }
-                className="btn btn-whatsapp text-sm"
-              >
-                <WhatsAppIcon className="h-4 w-4 shrink-0" />
-                <span className="truncate">
-                  {isOutOfStock
-                    ? "Consultar por WhatsApp"
-                    : "Pedir por WhatsApp"}
-                </span>
-              </a>
+            <div className="mt-auto space-y-4 pt-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                Contacta a un asesor
+              </p>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {ADVISORS.map((advisor) => (
+                  <a
+                    key={advisor.id}
+                    href={buildProductWhatsAppLink(
+                      {
+                        id: product.id,
+                        title,
+                        storage: selectedStorage || null,
+                        color: selectedColorName || null,
+                        price: product.price,
+                      },
+                      undefined,
+                      advisor,
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(event) => {
+                      const url = buildProductWhatsAppLink(
+                        {
+                          id: product.id,
+                          title,
+                          storage: selectedStorage || null,
+                          color: selectedColorName || null,
+                          price: product.price,
+                        },
+                        `${window.location.origin}${window.location.pathname}#producto-${product.id}`,
+                        advisor,
+                      );
+                      window.open(url, "_blank", "noopener,noreferrer");
+                      event.preventDefault();
+                    }}
+                    aria-label={
+                      isOutOfStock
+                        ? `Consultar disponibilidad de ${title} con ${advisor.name}`
+                        : `Pedir ${title} con ${advisor.name}`
+                    }
+                    className="btn btn-whatsapp text-sm"
+                  >
+                    <WhatsAppIcon className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{advisor.name}</span>
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
         </div>

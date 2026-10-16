@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { SOCIAL_LINKS } from "@/lib/social";
-import { WhatsAppIcon } from "@/components/icons";
 import { Reveal } from "@/components/motion/Reveal";
+import { AdvisorContacts } from "@/components/AdvisorContacts";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 
 const footerMessage =
@@ -37,15 +37,7 @@ export function Footer() {
                 Celulares, accesorios y streetwear exclusivo con envío
                 asegurado. Pedidos directos por WhatsApp, sin intermediarios.
               </p>
-              <a
-                href={buildWhatsAppLink(footerMessage)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-primary mt-5 h-11 min-h-11 px-5"
-              >
-                <WhatsAppIcon className="h-4 w-4" />
-                Escribir por WhatsApp
-              </a>
+              <AdvisorContacts message={footerMessage} />
             </div>
           </Reveal>
 

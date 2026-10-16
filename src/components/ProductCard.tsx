@@ -7,6 +7,7 @@ import type {
 } from "react";
 import type { Product, ProductStatus } from "@/types/database";
 import { buildProductWhatsAppLink } from "@/lib/whatsapp";
+import { ADVISORS } from "@/lib/constants";
 import { formatPrice } from "@/lib/format";
 import {
   formatTitle,
@@ -99,7 +100,6 @@ export function ProductCard({
     color: colorNameOf(selectedColor) || null,
     price: product.price,
   };
-  const whatsappUrl = buildProductWhatsAppLink(productLinkData);
 
   function goToImage(next: number) {
     const total = activeImages.length;
@@ -366,30 +366,38 @@ export function ProductCard({
           {formatPrice(product.price)}
         </p>
 
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(event) => {
-            const url = buildProductWhatsAppLink(
-              productLinkData,
-              `${window.location.origin}${window.location.pathname}#producto-${product.id}`,
-            );
-            window.open(url, "_blank", "noopener,noreferrer");
-            event.preventDefault();
-          }}
-          aria-label={
-            isOutOfStock
-              ? `Consultar disponibilidad de ${title} por WhatsApp`
-              : `Pedir ${title} por WhatsApp`
-          }
-          className="btn btn-whatsapp mt-0.5 text-xs sm:text-sm"
-        >
-          <WhatsAppIcon className="h-4 w-4 shrink-0" />
-          <span className="truncate">
-            {isOutOfStock ? "Consultar" : "Pedir por WhatsApp"}
-          </span>
-        </a>
+        <div className="mt-0.5 grid grid-cols-2 gap-2">
+          {ADVISORS.map((advisor) => (
+            <a
+              key={advisor.id}
+              href={buildProductWhatsAppLink(
+                productLinkData,
+                undefined,
+                advisor,
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(event) => {
+                const url = buildProductWhatsAppLink(
+                  productLinkData,
+                  `${window.location.origin}${window.location.pathname}#producto-${product.id}`,
+                  advisor,
+                );
+                window.open(url, "_blank", "noopener,noreferrer");
+                event.preventDefault();
+              }}
+              aria-label={
+                isOutOfStock
+                  ? `Consultar disponibilidad de ${title} con ${advisor.name}`
+                  : `Pedir ${title} con ${advisor.name}`
+              }
+              className="btn btn-whatsapp text-[11px] sm:text-xs"
+            >
+              <WhatsAppIcon className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{advisor.name}</span>
+            </a>
+          ))}
+        </div>
       </div>
     </article>
   );

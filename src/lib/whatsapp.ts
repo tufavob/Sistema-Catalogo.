@@ -1,10 +1,16 @@
-const WHATSAPP_NUMBER =
-  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "51916196809";
+import { ADVISORS, type Advisor } from "@/lib/constants";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 
-export function buildWhatsAppLink(message: string): string {
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+export function getDefaultAdvisor(): Advisor {
+  return ADVISORS.find((advisor) => advisor.available) ?? ADVISORS[0];
+}
+
+export function buildWhatsAppLink(
+  message: string,
+  advisor: Advisor = getDefaultAdvisor(),
+): string {
+  return `https://wa.me/${advisor.phone}?text=${encodeURIComponent(message)}`;
 }
 
 export function buildProductWhatsAppLink(
@@ -16,6 +22,7 @@ export function buildProductWhatsAppLink(
     price: number;
   },
   productUrl?: string,
+  advisor: Advisor = getDefaultAdvisor(),
 ): string {
   const url =
     productUrl ||
@@ -41,5 +48,5 @@ export function buildProductWhatsAppLink(
   ].filter((line): line is string => Boolean(line));
 
   const text = lines.join("\n");
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+  return `https://wa.me/${advisor.phone}?text=${encodeURIComponent(text)}`;
 }

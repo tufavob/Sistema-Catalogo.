@@ -2,14 +2,13 @@
 
 import { useRef } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import Image from "next/image";
 import {
   BadgeCheckIcon,
   ShieldCheckIcon,
   TruckIcon,
   WhatsAppIcon,
 } from "@/components/icons";
-import { buildWhatsAppLink } from "@/lib/whatsapp";
+import { AdvisorPicker } from "@/components/AdvisorPicker";
 
 const heroMessage =
   "Hola, me gustaría pedir información sobre el catálogo de celulares Northumbria.";
@@ -34,7 +33,7 @@ const HIGHLIGHTS = [
 
 export function Hero() {
   const cardRef = useRef<HTMLDivElement>(null);
-  const ctaRef = useRef<HTMLAnchorElement>(null);
+  const ctaRef = useRef<HTMLButtonElement>(null);
 
   function handlePointerMove(event: ReactPointerEvent<HTMLDivElement>) {
     if (event.pointerType === "touch") return;
@@ -74,17 +73,21 @@ export function Hero() {
         onPointerLeave={handlePointerLeave}
         className="relative isolate w-full overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950 text-white shadow-2xl"
       >
-        {/* IMAGEN DE FONDO COMPLETA */}
-        <Image
-          alt="Northumbria Logo Fondo"
-          src="/logo.jpeg"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center -z-20 opacity-80"
-        />
+        {/* VIDEO DE FONDO COMPLETO */}
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          poster="/logo.jpeg"
+          aria-hidden="true"
+          className="absolute inset-0 -z-20 h-full w-full object-cover"
+        >
+          <source src="/fondo-dinero.mp4" type="video/mp4" />
+        </video>
 
-        {/* OVERLAY OSCURO */}
+        {/* CAPA OSCURA SEMITRANSPARENTE */}
         <div
           aria-hidden="true"
           className="absolute inset-0 bg-black/60 -z-10"
@@ -112,24 +115,23 @@ export function Hero() {
               className="hero-enter mt-3 max-w-md text-sm leading-6 text-zinc-200 drop-shadow sm:text-center"
               style={{ "--d": "180ms" } as never}
             >
-              Celulares, accesorios seleccionados y ropa exclusiva con envío
-              asegurado y atención inmediata.
+              Perfumes exclusivos, celulares, accesorios y streetwear premium.
+              Lujo, estilo y exclusividad en un solo lugar
             </p>
 
             <div
               className="hero-enter mt-6 flex flex-col gap-3 sm:flex-row"
               style={{ "--d": "260ms" } as never}
             >
-              <a
-                ref={ctaRef}
-                href={buildWhatsAppLink(heroMessage)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-primary btn-magnetic"
+              <AdvisorPicker
+                message={heroMessage}
+                buttonRef={ctaRef}
+                wrapperClassName="w-full sm:w-auto"
+                className="btn btn-primary btn-magnetic w-full sm:w-auto"
               >
                 <WhatsAppIcon className="h-5 w-5" />
                 Pedir por WhatsApp
-              </a>
+              </AdvisorPicker>
               <a href="#catalogo" className="btn btn-ghost-dark">
                 Ver catálogo
               </a>
